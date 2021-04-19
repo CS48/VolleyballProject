@@ -222,15 +222,57 @@ def bump(passer, setter, serve_or_poss):
         print("%s %s receives and passes to %s %s." % (passer.firstname, passer.lastname, setter.firstname, setter.lastname))
         return 0, setter
 
-def set(setter, attacker):
+def set(setter, serve_rotation):
     bhe_chance = (100 - setter.setting) / 400
+
+    potential_targets = []
+    dict_keys = ["1", "2", "3", "4", "5", "6"]
+    rotation = serve_rotation["Rotation"]
+
+    if rotation == 1:
+        for x in dict_keys:
+            if serve_rotation[x].position in ("Opp", "MB", "OH"):
+                potential_targets.append(serve_rotation[x])
+    elif rotation == 2:
+        for x in dict_keys:
+            if serve_rotation[x].position in ("OH2", "Opp", "MB"):
+                potential_targets.append(serve_rotation[x])
+    elif rotation == 3:
+        for x in dict_keys:
+            if serve_rotation[x].position in ("MB2", "OH2", "Opp"):
+                potential_targets.append(serve_rotation[x])
+    elif rotation == 4:
+        for x in dict_keys:
+            # This one is OH, MB2, OH2 because the setter is now 4, and MB2/OH2 are the main attack
+            # options. However, OH is a back row attack option.
+            if serve_rotation[x].position in ("OH", "MB2", "OH2"):
+                potential_targets.append(serve_rotation[x])
+    elif rotation == 5:
+        for x in dict_keys:
+            # This one is OH, OH2, MB2 because the setter is now 5, and MB2/OH are the main attack
+            # options. However, OH2 is a back row attack option.
+            if serve_rotation[x].position in ("OH", "OH2", "MB2"):
+                potential_targets.append(serve_rotation[x])
+    elif rotation == 6:
+        for x in dict_keys:
+            # This one is MB, OH, Opp because the setter is now 6, and MB/OH are the main attack
+            # options. However, Opp is a back row attack option.
+            if serve_rotation[x].position in ("MB", "OH", "Opp"):
+                potential_targets.append(serve_rotation[x])
+    else:
+        print("rotation problem in set targeting")
+
+    # randomly select a target for the set. This is a singular player and not a list because we aren't using random.
+    # choices which would allow us to bias the selection. I just want to make sure it works first before bringing IQ
+    # into it.
+    target = random.choice(potential_targets)
 
     if flip(bhe_chance) == 'H':
         print("%s %s commits a ball handling error." % (setter.firstname, setter.lastname))
-        return 1, attacker
+        return 1, target
     else:
-        print("%s %s sets to %s %s." % (setter.firstname, setter.lastname, attacker.firstname, attacker.lastname))
-        return 0, attacker
+        print("%s %s sets to %s %s." % (setter.firstname, setter.lastname, target.firstname, target.lastname))
+        return 0, target
 
 # I recently rewrote this function to see how well it would work. Basically, the attacker's attack and iq stats are
 # combined and then put into a qualitative category. The same happens with the defender's receive and reaction stats.
@@ -549,7 +591,7 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
             # if == 0, then successful pass
             else:
                 # attempt to set
-                set_result = set(pass_result[1], awayteam[3])
+                set_result = set(pass_result[1], serve_rotation_away)
 
                 # if ball handling error, home team serves again after gaining point
                 if set_result[0] == 1:
@@ -647,7 +689,7 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
             # if == 0, then successful pass
             else:
                 # attempt to set
-                set_result = set(pass_result[1], hometeam[3])
+                set_result = set(pass_result[1], serve_rotation_home)
 
                 # if ball handling error, away team serves after gaining point
                 if set_result[0] == 1:
@@ -724,7 +766,12 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
             print("missed serve and possesion treees")
 
     else:
-        print("Game Over! \n Home:%d Away:%d" % (homescore, awayscore))
+        if homescore == 15:
+            return 1
+        else:
+            return 0
+        
+        print("Set Score! \n Home:%d Away:%d" % (homescore, awayscore))
 
 
 
