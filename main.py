@@ -34,7 +34,17 @@ class Player:
         self.kills = 0
         self.attack_errors = 0
         self.total_attacks = 0
-        self
+        self.service_aces = 0
+        self.service_errors = 0
+        self.total_serves = 0
+        self.bhe = 0
+        # defense
+        self.digs = 0
+        self.receiving_errors = 0
+        self.blocks = 0
+        self.blocking_errors = 0
+
+
         # attributes generate randomly based on player type and ovr is determined by a formula that is weighted
         # differently for each position
         if playertype == "None":
@@ -148,7 +158,7 @@ def serve(server, receiver):
         print("It's out of bounds. A service error!")
         return 1, receiver
 
-    return 0, receiver
+    return 0, server, receiver
 
 
 def serve_target(server, serve_rotation):
@@ -422,9 +432,9 @@ def attack(attacker, receiver, serve_rotation):
     block_result = block(attacker, serve_rotation)
 
     if block_result[0] == 5:
-        return 4, block_result[1]
+        return 4, attacker, block_result[1]
     elif block_result[0] == 4:
-        return 3, block_result[1]
+        return 3, attacker, block_result[1]
     else:
         # calculating the "attack score" which will ultimately be either 0 (bad),(average), or 2 (good)
         if 0 <= attacker.attacking < 20:
@@ -527,12 +537,12 @@ def attack(attacker, receiver, serve_rotation):
         # team and possibly kept in play
         if flip(error_prob) == 'H':
             print("It's an attacking error")
-            return 2, receiver
+            return 2, attacker, receiver
         elif flip(success_prob) == 'H':
             print("It's a kill")
-            return 1, receiver
+            return 1, attacker, receiver
         else:
-            return 0, receiver
+            return 0, attacker, receiver
 
 
 # this is what is used to select the players on the other team that should be in defensive receiving positions.
@@ -598,7 +608,7 @@ def attack_target(attacker, serve_rotation):
 def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, homeserve, awayserve, home_firstserve,
             away_firstserve, newrotation, home_possession, away_possession, wasithomeserve, serve_or_poss, result = None):
 
-    if homescore < 15 and awayscore < 15:
+    if homescore < 25 and awayscore < 25 or abs(homescore - awayscore) < 2:
         if homeserve:
             if newrotation:
                 rotation = serve_rotation_home['Rotation']
@@ -707,6 +717,17 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
             # if pass result == 1, then there was a receiving error and the home team gets a point and serves again
             if pass_result[0] == 1:
+
+                if serve_or_poss == True:
+                    # stat track: Receiver gets an error
+                    result[2].receiving_errors = result[2].receiving_errors + 1
+                    # stat track: server gets a SA
+                    result[1].service_aces = result[1].service_aces + 1
+                else:
+                    # stat track: result[1] is given a kill, this should be the set_result[1] from the previous iter.
+                    result[1].kills = result[1].kills + 1
+
+                # stat track: result
                 homescore = homescore + 1
                 print(homescore, awayscore)
 
@@ -725,11 +746,18 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
             # if == 0, then successful pass
             else:
+
+                # stat track: add a dig to the passer
+                result[1].digs = result[1].digs + 1
+
                 # attempt to set
                 set_result = set(pass_result[1], serve_rotation_away)
 
                 # if ball handling error, home team serves again after gaining point
                 if set_result[0] == 1:
+                    # stat track: pass_result[1] (setter) is charged with a bhe
+                    pass_result[1].bhe = pass_result[1].bhe + 1
+
                     homescore = homescore + 1
                     print(homescore, awayscore)
 
@@ -754,7 +782,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                     attack_result = attack(set_result[1], target[0], serve_rotation_home)
 
                     # home team blocking error, away team gets point and serves
-                    if attack_result == 4:
+                    if attack_result[0] == 4:
+                        # stat track: attack_result[1] is charged with a blocking error
+                        attack_result[2].blocking_errors = attack_result[2].blocking_errors + 1
+                        # stat track: attack_result[1] is given a kill
+                        attack_result[1].kills = attack_result[1].kills + 1
+
+                        print("%s %s is credited with a kill." % (attack_result[1].firstname, attack_result[1].lastname))
+
                         awayscore = awayscore + 1
                         print(homescore, awayscore)
 
@@ -773,7 +808,10 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                                     awayscore, False, True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                     # home team successful block, home team gets point and serves
-                    elif attack_result == 3:
+                    elif attack_result[0] == 3:
+                        # stat track: attack_result[1] is given a block
+                        attack_result[1].blocks = attack_result[1].blocks + 1
+
                         homescore = homescore + 1
                         print(homescore, awayscore)
 
@@ -793,6 +831,9 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
                     # attacking error, home team gets point and serves again
                     elif attack_result[0] == 2:
+                        # stat track: attacker gets charged with attacking error
+                        attack_result[1].attack_errors = attack_result[1].attack_errors + 1
+
                         homescore = homescore + 1
                         print(homescore, awayscore)
 
@@ -813,6 +854,9 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
                     # kill, away team gets point and serves again
                     elif attack_result[0] == 1:
+                        # stat track: attacker gets a kill
+                        attack_result[1].kills = attack_result[1].kills + 1
+
                         awayscore = awayscore + 1
                         print(homescore, awayscore)
 
@@ -838,10 +882,20 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
         elif home_possession:
             # attempt to pass
-            pass_result = bump(result[1], hometeam[0], serve_or_poss)
+            pass_result = bump(result[2], hometeam[0], serve_or_poss)
 
             # if pass result == 1, then there was a receiving error and the away team gets a point and serves again
             if pass_result[0] == 1:
+
+                if serve_or_poss == True:
+                    # stat track: Receiver gets an error
+                    result[2].receiving_errors = result[2].receiving_errors + 1
+                    # stat track: server gets a SA
+                    result[1].service_aces = result[1].service_aces + 1
+                else:
+                    # stat track: result[1] is given a kill, this should be the set_result[1] from the previous iter.
+                    result[1].kills = result[1].kills + 1
+
                 awayscore = awayscore + 1
                 print(homescore, awayscore)
 
@@ -861,11 +915,17 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
             # if == 0, then successful pass
             else:
+                # stat track: add a dig to the passer
+                result[1].digs = result[1].digs + 1
+
                 # attempt to set
                 set_result = set(pass_result[1], serve_rotation_home)
 
                 # if ball handling error, away team serves after gaining point
                 if set_result[0] == 1:
+                    # stat track: pass_result[1] (setter) is charged with a bhe
+                    pass_result[1].bhe = pass_result[1].bhe + 1
+
                     awayscore = awayscore + 1
                     print(homescore, awayscore)
 
@@ -891,6 +951,13 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
                     # away team blocking error, home team gets point and serves
                     if attack_result[0] == 4:
+                        # stat track: attack_result[2] is charged with a blocking error
+                        attack_result[2].blocking_errors = attack_result[2].blocking_errors + 1
+                        # stat track: attack_result[1] is given a kill
+                        attack_result[1].kills = attack_result[1].kills + 1
+
+                        print("%s %s is credited with a kill." % (attack_result[1].firstname, attack_result[1].lastname))
+
                         homescore = homescore + 1
                         print(homescore, awayscore)
 
@@ -912,6 +979,9 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
                     # successful away team block, away team gets point and serves
                     elif attack_result[0] == 3:
+                        # stat track: attack_result[1] is added a block
+                        attack_result[1].blocks = attack_result[1].blocks + 1
+
                         awayscore = awayscore + 1
                         print(homescore, awayscore)
 
@@ -931,6 +1001,9 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
                     # attacking error, away team gets point and serves again
                     elif attack_result[0] == 2:
+                        # stat track: set_result[1] is charged with an attacking error
+                        attack_result[1].attack_errors = attack_result[1].attack_errors + 1
+
                         awayscore = awayscore + 1
                         print(homescore, awayscore)
 
@@ -950,6 +1023,9 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
                     # kill, home team gets point and serves again
                     elif attack_result[0] == 1:
+                        # stat track: set_result[1] is given a kill
+                        attack_result[1].kills = attack_result[1].kills + 1
+
                         homescore = homescore + 1
                         print(homescore, awayscore)
 
@@ -976,15 +1052,10 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                                 wasithomeserve, False, attack_result)
 
         else:
-            print("missed serve and possesion treees")
+            print("missed serve and possession trees")
 
     else:
-        if homescore == 15:
-            return 1
-        else:
-            return 0
-        
-        print("Set Score! \n Home:%d Away:%d" % (homescore, awayscore))
+        print("\nSet Score! \nHome:%d Away:%d \n" % (homescore, awayscore))
 
 
 
@@ -1036,6 +1107,30 @@ def main():
 
     playset(team1, team2, serve_rotation_team1, serve_rotation_team2, 0, 0, True, False,
             True,True, False, False, False, True, True, result=None)
+
+    print("\nHome Team Stats\n")
+    for x in team1:
+        print(x.firstname, x.lastname)
+        print(x.position)
+        print("Kills:", x.kills)
+        print("AE:", x.attack_errors)
+        print("BHE:", x.bhe)
+        print("Digs:", x.digs)
+        print("RE", x.receiving_errors)
+        print("Blocks:", x.blocks)
+        print("BE:", x.blocking_errors, "\n")
+
+    print("\nAway Team Stats\n")
+    for x in team2:
+        print(x.firstname, x.lastname)
+        print(x.position)
+        print("Kills:", x.kills)
+        print("AE:", x.attack_errors)
+        print("BHE:", x.bhe)
+        print("Digs:", x.digs)
+        print("RE", x.receiving_errors)
+        print("Blocks:", x.blocks)
+        print("BE:", x.blocking_errors, "\n")
 
 
 
