@@ -635,7 +635,7 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 newrotation = False
 
                 # re-enter the loop with homeserve as true, awayserve false
-                playset(hometeam, awayteam, serve_rotation_home,serve_rotation_away, homescore, awayscore, True,
+                return playset(hometeam, awayteam, serve_rotation_home,serve_rotation_away, homescore, awayscore, True,
                         False, home_firstserve, away_firstserve, newrotation, False, False, True, True)
 
             # if the serve results in a service error
@@ -647,16 +647,16 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 # re-enter the loop with homeserve false, awayserve true, away_firstserve as false
                 if away_firstserve:
                     newrotation = False
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
                             True, home_firstserve, True, newrotation, False, False, True, True)
                 else:
                     newrotation = True
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
                             True, home_firstserve, False, newrotation, False, False, True, True)
 
             # if the result is 0, then the serve was received and now we must go into an away_possession
             else:
-                playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
+                return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
                         False, home_firstserve, away_firstserve, newrotation, False, True, True, True, serve_result)
 
         elif awayserve:
@@ -685,7 +685,7 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
                 newrotation = False
                 # re-enter the loop with awayserve as true, homeserve false, away_firstserve as false
-                playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
+                return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
                         True, home_firstserve, away_firstserve, newrotation, False, False, False, True)
 
             # if the serve results in a service error
@@ -697,18 +697,18 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 # re-enter the loop with awayserve false, homeserve true, home_firstserve as false
                 if home_firstserve:
                     newrotation = False
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                             True,
                             False, False, away_firstserve, newrotation, False, False, False, True)
                 else:
                     newrotation = True
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                             True,
                             False, False, away_firstserve, newrotation, False, False, False, True)
 
             # if the result is 0, then the serve was received and now we must go into an home_possession
             else:
-                playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
+                return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
                         False, home_firstserve, away_firstserve, newrotation, True, False, False, True,  serve_result)
 
         elif away_possession:
@@ -735,13 +735,13 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 if wasithomeserve:
                     newrotation = False
                     # re-enter the loop with homeserve true, awayserve  false, no new rotation
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, True,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, True,
                             False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                 # if it was awayserve, rotate
                 else:
                     newrotation = True
                     # re-enter the loop with homeserve true, awayserve  false, and new rotation
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, True,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, True,
                             False, home_firstserve, away_firstserve, newrotation, False, False,wasithomeserve, False)
 
             # if == 0, then successful pass
@@ -765,14 +765,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                     if wasithomeserve:
                         newrotation = False
                     # re-enter the loop with homeserve true, awayserve  false, no new rotation
-                        playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                        return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                 True,
                                 False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                     # if it was awayserve, rotate
                     else:
                         newrotation = True
                         # re-enter the loop with homeserve true, awayserve  false, and new rotation
-                        playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                        return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                 True,
                                 False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
@@ -799,12 +799,12 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                             if away_firstserve:
                                 newrotation = False
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, False, True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                         else:
                             newrotation = False
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, False, True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                     # home team successful block, home team gets point and serves
@@ -818,14 +818,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                         if wasithomeserve:
                             newrotation = False
                         # re-enter the loop with homeserve true, awayserve  false, no new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     True,
                                     False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                         # if it was awayserve, rotate
                         else:
                             newrotation = True
                             # re-enter the loop with homeserve true, awayserve  false, and new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     True,
                                     False, home_firstserve, away_firstserve, newrotation, False, False,wasithomeserve, False)
 
@@ -841,14 +841,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                         if wasithomeserve:
                             newrotation = False
                         # re-enter the loop with homeserve true, awayserve  false, no new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     True,
                                     False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                         # if it was awayserve, rotate
                         else:
                             newrotation = True
                             # re-enter the loop with homeserve true, awayserve  false, and new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     True,
                                     False, home_firstserve, away_firstserve, newrotation, False, False,wasithomeserve, False)
 
@@ -867,17 +867,17 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                             if away_firstserve:
                                 newrotation = False
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, False, True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                         else:
                             newrotation = False
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, False, True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                     # the ball is received by the home team, now it's time for a home possession
                     else:
-                        playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                        return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                 awayscore, False, False, home_firstserve, away_firstserve, newrotation, True, False, wasithomeserve,False, attack_result)
 
         elif home_possession:
@@ -904,13 +904,13 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 if not wasithomeserve:
                     newrotation = False
                     # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
                             True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                 else:
                     newrotation = True
                     # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                    playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
+                    return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore, False,
                             True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
             # if == 0, then successful pass
@@ -933,14 +933,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                     if not wasithomeserve:
                         newrotation = False
                         # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                        playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                        return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                 False,
                                 True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                     else:
                         newrotation = True
                         # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                        playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                        return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                 False,
                                 True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
@@ -965,7 +965,7 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                             newrotation = False
 
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, True, False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                         else:
                             newrotation = True
@@ -973,7 +973,7 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                             if home_firstserve:
                                 newrotation = False
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, True, False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
 
@@ -988,14 +988,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                         if not wasithomeserve:
                             newrotation = False
                             # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     False,
                                     True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                         else:
                             newrotation = True
                             # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     False,
                                     True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
@@ -1010,14 +1010,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                         if not wasithomeserve:
                             newrotation = False
                             # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     False,
                                     True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                         else:
                             newrotation = True
                             # re-enter the loop with awayserve true, homeserve  false, no new rotation
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
                                     False,
                                     True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
@@ -1034,7 +1034,7 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                             newrotation = False
 
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, True, False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
                         else:
                             newrotation = True
@@ -1042,12 +1042,12 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                             if home_firstserve:
                                 newrotation = False
 
-                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                            return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                     awayscore, True, False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
 
                     # the ball is received by the away team, now it's time for an away possession
                     else:
-                        playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                        return playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
                                 awayscore, False, False, home_firstserve, away_firstserve, newrotation, False, True,
                                 wasithomeserve, False, attack_result)
 
@@ -1055,7 +1055,15 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
             print("missed serve and possession trees")
 
     else:
-        print("\nSet Score! \nHome:%d Away:%d \n" % (homescore, awayscore))
+        if homescore > awayscore:
+            print("\nSet Score! \nHome:%d Away:%d \n" % (homescore, awayscore))
+            return 1
+        else:
+            print("\nSet Score! \nHome:%d Away:%d \n" % (homescore, awayscore))
+            return 2
+
+
+
 
 
 
@@ -1067,6 +1075,8 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 def main():
     team1 = create_team()
     team2 = create_team()
+    home_set_wins = 0
+    away_set_wins = 0
 
     serve_rotation_team1 = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
     serve_rotation_team2 = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
@@ -1105,8 +1115,25 @@ def main():
 
     #play the game
 
-    playset(team1, team2, serve_rotation_team1, serve_rotation_team2, 0, 0, True, False,
+    while home_set_wins < 3 and away_set_wins < 3:
+        n = playset(team1, team2, serve_rotation_team1, serve_rotation_team2, 0, 0, True, False,
             True,True, False, False, False, True, True, result=None)
+
+        if n == 1:
+            home_set_wins = home_set_wins + 1
+        elif n == 2:
+            away_set_wins = away_set_wins + 1
+        else:
+            print("error in assigning set win")
+
+    print("Game Over")
+
+    if home_set_wins == 3:
+        print("Home Team Wins the Game")
+    else:
+        print("Away Team Wins the Game")
+
+    print(home_set_wins, away_set_wins)
 
     print("\nHome Team Stats\n")
     for x in team1:
