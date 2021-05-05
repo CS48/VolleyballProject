@@ -100,12 +100,12 @@ def create_team():
     for x in team:
         print(x.firstname, x.lastname)
         print(x.position,"Ovr:%d" % x.ovr, "\n")
-        print("Attacking:", x.attacking, "\n")
-        print("Setting:", x.setting, "\n")
-        print("Serving:", x.serving, "\n")
-        print("Receiving:", x.receiving, "\n")
-        print("Reaction:", x.reaction, "\n")
-        print("Blocking:", x.blocking, "\n")
+        print("Attacking:", x.attacking)
+        print("Setting:", x.setting)
+        print("Serving:", x.serving)
+        print("Receiving:", x.receiving)
+        print("Reaction:", x.reaction)
+        print("Blocking:", x.blocking)
         print("VolleyIQ:", x.volleyiq, "\n")
 
     return team
@@ -274,20 +274,25 @@ def set(setter, serve_rotation):
         print("%s %s sets to %s %s." % (setter.firstname, setter.lastname, target.firstname, target.lastname))
         return 0, target
 
-# I recently rewrote this function to see how well it would work. Basically, the attacker's attack and iq stats are
-# combined and then put into a qualitative category. The same happens with the defender's receive and reaction stats.
-# From there. The qualitative categories are compared and the attack is given a success probability. In a future update
-# I may play around with having the success probability be a random number in a range rather than a set number for a
-# specific category comparison.
-def attack(attacker, receiver):
-    attack_score = 0
-    def_score = 0
+# What we want to do here is write a function whereby 1 or two blockers can challenge an attacker at the net. With
+# the possible outcomes being a successful block, a blocking error, a contact on a ball that remains in play, and
+# no contact at all. If it's no contact at all, we want to print nothing. No need to add anything to the console
+# readout in that case.
+def block(attacker, serve_rotation):
     success_prob = 0
     error_prob = 0
+    attack_score = 0
+    block_score = 0
+    potential_blockers = []
+    # Only the players who are front row in the rotation can block
+    dict_keys = ["4", "3", "2"]
 
-    # things to say before attack to make it look better in the console printout
-    phrases = ["%s %s attacks fiercely!", "%s %s attacks!", "%s %s attacks with a big swing!", "%s %s manages to get the ball over"]
+    for x in dict_keys:
+        potential_blockers.append(serve_rotation[x])
 
+    blocker = random.choice(potential_blockers)
+
+    print("%s goes for the block..." % blocker.lastname)
     # calculating the "attack score" which will ultimately be either 0 (bad),(average), or 2 (good)
     if 0 <= attacker.attacking < 20:
         attack_score = attack_score + 0
@@ -311,7 +316,6 @@ def attack(attacker, receiver):
     else:
         print("attack score error: iq stat not between 0 and 100")
 
-
     if 0 <= attack_score < 3:
         attack_score = 0
     elif 3 <= attack_score < 5:
@@ -321,83 +325,214 @@ def attack(attacker, receiver):
     else:
         print("attack_score problem 3")
 
-    # calculating the "def" which will ultimately be either 0 (bad), 1 (average), or 2 (good)
-    if 0 <= receiver.receiving < 20:
-        def_score = def_score + 0
-    elif 20 <= receiver.receiving < 40:
-        def_score = def_score + 1
-    elif 40 <= receiver.receiving < 60:
-        def_score = def_score + 2
-    elif 60 <= receiver.receiving < 80:
-        def_score = def_score + 3
-    elif 80 <= receiver.receiving <= 100:
-        def_score = def_score + 4
+    # calculating the "block" which will ultimately be either 0 (bad), 1 (average), or 2 (good)
+    if 0 <= blocker.blocking < 20:
+        block_score = block_score + 0
+    elif 20 <= blocker.blocking < 40:
+        block_score = block_score + 1
+    elif 40 <= blocker.blocking < 60:
+        block_score = block_score + 2
+    elif 60 <= blocker.blocking < 80:
+        block_score = block_score + 3
+    elif 80 <= blocker.blocking <= 100:
+        block_score = block_score + 4
     else:
-        print("def score error: rec stat not between 0 and 100")
+        print("block score error: block stat not between 0 and 100")
 
-    if 0 <= receiver.reaction < 33:
-        def_score = def_score + 0
-    elif 33 <= receiver.reaction < 66:
-        def_score = def_score + 1
-    elif 66 <= receiver.reaction <= 100:
-        def_score = def_score + 2
+    if 0 <= blocker.reaction < 33:
+        def_score = block_score + 0
+    elif 33 <= blocker.reaction < 66:
+        def_score = block_score + 1
+    elif 66 <= blocker.reaction <= 100:
+        block_score = block_score + 2
     else:
-        print("def score error: react stat not between 0 and 100")
+        print("block score error: react stat not between 0 and 100")
 
-    if 0 <= def_score < 3:
-        def_score = 0
-    elif 3 <= def_score < 5:
-        def_score = 1
-    elif def_score >= 5:
-        def_score = 2
+    if 0 <= block_score < 3:
+        block_score = 0
+    elif 3 <= block_score < 5:
+        block_score = 1
+    elif block_score >= 5:
+        block_score = 2
     else:
-        print("def_score problem 3")
+        print("block_score problem 3")
 
     # here's where the comparison happens and a success_prob is given
-    if attack_score == 0 and def_score == 0:
+    if attack_score == 0 and block_score == 0:
         success_prob = .50
-    elif attack_score == 0 and def_score == 1:
+    elif attack_score == 0 and block_score == 1:
+        success_prob = .45
+    elif attack_score == 0 and block_score == 2:
         success_prob = .40
-    elif attack_score == 0 and def_score == 2:
-        success_prob = .30
-    elif attack_score == 1 and def_score == 0:
-        success_prob = .60
-    elif attack_score == 1 and def_score == 1:
+    elif attack_score == 1 and block_score == 0:
+        success_prob = .55
+    elif attack_score == 1 and block_score == 1:
         success_prob = .50
-    elif attack_score == 1 and def_score == 2:
-        success_prob = .40
-    elif attack_score == 2 and def_score == 0:
-        success_prob = .70
-    elif attack_score == 2 and def_score == 1:
+    elif attack_score == 1 and block_score == 2:
+        success_prob = .45
+    elif attack_score == 2 and block_score == 0:
         success_prob = .60
-    elif attack_score == 2 and def_score == 2:
+    elif attack_score == 2 and block_score == 1:
+        success_prob = .55
+    elif attack_score == 2 and block_score == 2:
         success_prob = .50
     else:
-        print("bro we got a problem with the attack")
+        print("bro we got a problem with the block")
 
-    # I decided to create an error probability based on the attacker's attack category
-    if attack_score == 0:
+    # I decided to create an error probability based on the blocker's block category
+    if block_score == 0:
         error_prob = .20
-    elif attack_score == 1:
+    elif block_score == 1:
         error_prob = .15
-    elif attack_score == 2:
+    elif block_score == 2:
         error_prob = .10
     else:
-        print("bro we got a problem with the error")
+        print("bro we got a problem with the block error")
+
+    if flip(error_prob) == 'H':
+        print("It's a blocking error")
+        return 5, blocker
+    elif flip(success_prob) == 'H':
+        print("It's blocked successfully!")
+        return 4, blocker
+    else:
+        print("The ball gets past the block attempt.")
+        return 3, blocker
+
+
+
+# I recently rewrote this function to see how well it would work. Basically, the attacker's attack and iq stats are
+# combined and then put into a qualitative category. The same happens with the defender's receive and reaction stats.
+# From there. The qualitative categories are compared and the attack is given a success probability. In a future update
+# I may play around with having the success probability be a random number in a range rather than a set number for a
+# specific category comparison.
+def attack(attacker, receiver, serve_rotation):
+    attack_score = 0
+    def_score = 0
+    success_prob = 0
+    error_prob = 0
+
+    # things to say before attack to make it look better in the console printout
+    phrases = ["%s %s attacks fiercely!", "%s %s attacks!", "%s %s attacks with a big swing!",
+               "%s %s manages to get the ball over"]
 
     # spit out a random attack phrase
     print(random.choice(phrases) % (attacker.firstname, attacker.lastname))
 
-    # make some biased coin flips to determine whether the attack is an error, successful, or is touched by the other
-    # team and possibly kept in play
-    if flip(error_prob) == 'H':
-        print("It's an attacking error")
-        return 2, receiver
-    elif flip(success_prob) == 'H':
-        print("It's a kill")
-        return 1, receiver
+    block_result = block(attacker, serve_rotation)
+
+    if block_result[0] == 5:
+        return 4, block_result[1]
+    elif block_result[0] == 4:
+        return 3, block_result[1]
     else:
-        return 0, receiver
+        # calculating the "attack score" which will ultimately be either 0 (bad),(average), or 2 (good)
+        if 0 <= attacker.attacking < 20:
+            attack_score = attack_score + 0
+        elif 20 <= attacker.attacking < 40:
+            attack_score = attack_score + 1
+        elif 40 <= attacker.attacking < 60:
+            attack_score = attack_score + 2
+        elif 60 <= attacker.attacking < 80:
+            attack_score = attack_score + 3
+        elif 80 <= attacker.attacking <= 100:
+            attack_score = attack_score + 4
+        else:
+            print("attack score error: attack stat not between 0 and 100")
+
+        if 0 <= attacker.volleyiq < 33:
+            attack_score = attack_score + 0
+        elif 33 <= attacker.volleyiq < 66:
+            attack_score = attack_score + 1
+        elif 66 <= attacker.volleyiq <= 100:
+            attack_score = attack_score + 2
+        else:
+            print("attack score error: iq stat not between 0 and 100")
+
+
+        if 0 <= attack_score < 3:
+            attack_score = 0
+        elif 3 <= attack_score < 5:
+            attack_score = 1
+        elif attack_score >= 5:
+            attack_score = 2
+        else:
+            print("attack_score problem 3")
+
+        # calculating the "def" which will ultimately be either 0 (bad), 1 (average), or 2 (good)
+        if 0 <= receiver.receiving < 20:
+            def_score = def_score + 0
+        elif 20 <= receiver.receiving < 40:
+            def_score = def_score + 1
+        elif 40 <= receiver.receiving < 60:
+            def_score = def_score + 2
+        elif 60 <= receiver.receiving < 80:
+            def_score = def_score + 3
+        elif 80 <= receiver.receiving <= 100:
+            def_score = def_score + 4
+        else:
+            print("def score error: rec stat not between 0 and 100")
+
+        if 0 <= receiver.reaction < 33:
+            def_score = def_score + 0
+        elif 33 <= receiver.reaction < 66:
+            def_score = def_score + 1
+        elif 66 <= receiver.reaction <= 100:
+            def_score = def_score + 2
+        else:
+            print("def score error: react stat not between 0 and 100")
+
+        if 0 <= def_score < 3:
+            def_score = 0
+        elif 3 <= def_score < 5:
+            def_score = 1
+        elif def_score >= 5:
+            def_score = 2
+        else:
+            print("def_score problem 3")
+
+        # here's where the comparison happens and a success_prob is given
+        if attack_score == 0 and def_score == 0:
+            success_prob = .50
+        elif attack_score == 0 and def_score == 1:
+            success_prob = .45
+        elif attack_score == 0 and def_score == 2:
+            success_prob = .40
+        elif attack_score == 1 and def_score == 0:
+            success_prob = .55
+        elif attack_score == 1 and def_score == 1:
+            success_prob = .50
+        elif attack_score == 1 and def_score == 2:
+            success_prob = .45
+        elif attack_score == 2 and def_score == 0:
+            success_prob = .60
+        elif attack_score == 2 and def_score == 1:
+            success_prob = .55
+        elif attack_score == 2 and def_score == 2:
+            success_prob = .50
+        else:
+            print("bro we got a problem with the attack")
+
+        # I decided to create an error probability based on the attacker's attack category
+        if attack_score == 0:
+            error_prob = .20
+        elif attack_score == 1:
+            error_prob = .15
+        elif attack_score == 2:
+            error_prob = .10
+        else:
+            print("bro we got a problem with the error")
+
+        # make some biased coin flips to determine whether the attack is an error, successful, or is touched by the other
+        # team and possibly kept in play
+        if flip(error_prob) == 'H':
+            print("It's an attacking error")
+            return 2, receiver
+        elif flip(success_prob) == 'H':
+            print("It's a kill")
+            return 1, receiver
+        else:
+            return 0, receiver
 
 
 # this is what is used to select the players on the other team that should be in defensive receiving positions.
@@ -616,10 +751,48 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 # if set is successful...attack
                 else:
                     target = attack_target(set_result[1], serve_rotation_home)
-                    attack_result = attack(set_result[1], target[0])
+                    attack_result = attack(set_result[1], target[0], serve_rotation_home)
+
+                    # home team blocking error, away team gets point and serves
+                    if attack_result == 4:
+                        awayscore = awayscore + 1
+                        print(homescore, awayscore)
+
+                        if wasithomeserve:
+                            newrotation = True
+
+                            if away_firstserve:
+                                newrotation = False
+
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                                    awayscore, False, True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
+                        else:
+                            newrotation = False
+
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                                    awayscore, False, True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
+
+                    # home team successful block, home team gets point and serves
+                    elif attack_result == 3:
+                        homescore = homescore + 1
+                        print(homescore, awayscore)
+
+                        if wasithomeserve:
+                            newrotation = False
+                        # re-enter the loop with homeserve true, awayserve  false, no new rotation
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                                    True,
+                                    False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
+                        # if it was awayserve, rotate
+                        else:
+                            newrotation = True
+                            # re-enter the loop with homeserve true, awayserve  false, and new rotation
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                                    True,
+                                    False, home_firstserve, away_firstserve, newrotation, False, False,wasithomeserve, False)
 
                     # attacking error, home team gets point and serves again
-                    if attack_result[0] == 2:
+                    elif attack_result[0] == 2:
                         homescore = homescore + 1
                         print(homescore, awayscore)
 
@@ -714,10 +887,50 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 # if set is successful...attack
                 else:
                     target = attack_target(set_result[1], serve_rotation_away)
-                    attack_result = attack(set_result[1], target[0])
+                    attack_result = attack(set_result[1], target[0], serve_rotation_away)
 
-                    # attacking error, home team gets point and serves again
-                    if attack_result[0] == 2:
+                    # away team blocking error, home team gets point and serves
+                    if attack_result[0] == 4:
+                        homescore = homescore + 1
+                        print(homescore, awayscore)
+
+                        if wasithomeserve:
+                            newrotation = False
+
+
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                                    awayscore, True, False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
+                        else:
+                            newrotation = True
+
+                            if home_firstserve:
+                                newrotation = False
+
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore,
+                                    awayscore, True, False, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
+
+
+                    # successful away team block, away team gets point and serves
+                    elif attack_result[0] == 3:
+                        awayscore = awayscore + 1
+                        print(homescore, awayscore)
+
+                        if not wasithomeserve:
+                            newrotation = False
+                            # re-enter the loop with awayserve true, homeserve  false, no new rotation
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                                    False,
+                                    True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
+
+                        else:
+                            newrotation = True
+                            # re-enter the loop with awayserve true, homeserve  false, no new rotation
+                            playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homescore, awayscore,
+                                    False,
+                                    True, home_firstserve, away_firstserve, newrotation, False, False, wasithomeserve, False)
+
+                    # attacking error, away team gets point and serves again
+                    elif attack_result[0] == 2:
                         awayscore = awayscore + 1
                         print(homescore, awayscore)
 
@@ -789,15 +1002,15 @@ def main():
     for player in team1:
         if player.position == "S":
             serve_rotation_team1['1'] = player
-        elif player.position == "MB2":
+        elif player.position == "OH":
             serve_rotation_team1['2'] = player
-        elif player.position == "OH2":
+        elif player.position == "MB":
             serve_rotation_team1['3'] = player
         elif player.position == "Opp":
             serve_rotation_team1['4'] = player
-        elif player.position == "MB":
+        elif player.position == "OH2":
             serve_rotation_team1['5'] = player
-        elif player.position == "OH":
+        elif player.position == "MB2":
             serve_rotation_team1['6'] = player
         else:
             print("error assigning player to team1 serve rotation")
@@ -805,15 +1018,15 @@ def main():
     for player in team2:
         if player.position == "S":
             serve_rotation_team2['1'] = player
-        elif player.position == "MB2":
+        elif player.position == "OH":
             serve_rotation_team2['2'] = player
-        elif player.position == "OH2":
+        elif player.position == "MB":
             serve_rotation_team2['3'] = player
         elif player.position == "Opp":
             serve_rotation_team2['4'] = player
-        elif player.position == "MB":
+        elif player.position == "OH2":
             serve_rotation_team2['5'] = player
-        elif player.position == "OH":
+        elif player.position == "MB2":
             serve_rotation_team2['6'] = player
         else:
             print("error assigning player to team2 serve rotation")
