@@ -3,6 +3,9 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import random, re, json, requests, numpy
+from openpyxl import load_workbook
+
+
 
 first_name_data = ["Emily", "Hannah", "Madison", "Ashley", "Sarah", "Alexis", "Samantha", "Jessica", "Elizabeth",
                    "Taylor", "Lauren", "Alyssa", "Kayla", "Abigail", "Brianna", "Olivia", "Emma", "Megan", "Grace",
@@ -625,8 +628,13 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
             # Do the serve
             target = serve_target(serve_rotation_home["1"], serve_rotation_away)
             serve_result = serve(serve_rotation_home["1"], target[0])
+            # stat track: server gets a serve attempt
+            serve_rotation_home["1"].total_serves = serve_rotation_home["1"].total_serves + 1
+
             # if the serve results in an ace
             if serve_result[0] == 2:
+                # stat track: server gets a service ace
+                serve_rotation_home["1"].service_aces = serve_rotation_home["1"].service_aces + 1
                 # increase the homescore by 1
                 homescore = homescore + 1
                 print(homescore, awayscore)
@@ -640,6 +648,8 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
             # if the serve results in a service error
             elif serve_result[0] == 1:
+                # stat track: server gets a service error
+                serve_rotation_home["1"].service_errors = serve_rotation_home["1"].service_errors + 1
                 # increase the awayscore by 1
                 awayscore = awayscore +1
                 print(homescore, awayscore)
@@ -676,8 +686,14 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
             # Do the serve
             target = serve_target(serve_rotation_away["1"], serve_rotation_home)
             serve_result = serve(serve_rotation_away["1"], target[0])
+            # stat track: server gets a serve attempt
+            serve_rotation_home["1"].total_serves = serve_rotation_home["1"].total_serves + 1
+
             # if the serve results in an ace
             if serve_result[0] == 2:
+                # stat track: server gets a service ace
+                serve_rotation_home["1"].service_aces = serve_rotation_home["1"].service_aces + 1
+
                 # increase the awayscore by 1
                 awayscore = awayscore + 1
                 print(homescore, awayscore)
@@ -690,6 +706,9 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
             # if the serve results in a service error
             elif serve_result[0] == 1:
+                # stat track: server gets a service error
+                serve_rotation_home["1"].service_errors = serve_rotation_home["1"].service_errors + 1
+
                 # increase the homescore by 1
                 homescore = homescore + 1
                 print(homescore, awayscore)
@@ -780,6 +799,8 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 else:
                     target = attack_target(set_result[1], serve_rotation_home)
                     attack_result = attack(set_result[1], target[0], serve_rotation_home)
+                    # stat track: the attacker gets an attack attempt
+                    set_result[1].total_attacks = set_result[1].total_attacks + 1
 
                     # home team blocking error, away team gets point and serves
                     if attack_result[0] == 4:
@@ -948,6 +969,8 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
                 else:
                     target = attack_target(set_result[1], serve_rotation_away)
                     attack_result = attack(set_result[1], target[0], serve_rotation_away)
+                    # stat track: the attacker gets an attack attempt
+                    set_result[1].total_attacks = set_result[1].total_attacks + 1
 
                     # away team blocking error, home team gets point and serves
                     if attack_result[0] == 4:
@@ -1077,6 +1100,25 @@ def main():
     team2 = create_team()
     home_set_wins = 0
     away_set_wins = 0
+    set_number = 0
+
+    # Opening the spreadsheet and making a list of the sheet names
+    filename = "C:/Users/calvi/Desktop/Test_VB_Stat_DB.xlsx"
+    workbook = load_workbook(filename=filename)
+    player_sheets = workbook.sheetnames
+
+    # A very clunky way to clear the excel spreadsheet before it gets populated with new data
+    cells_to_clear = ["B2", "B3", "B4", "B5", "B6", "B7", "B9", "B10", "B11", "B12", "B13",
+                      "C2", "C3", "C4", "C5", "C6", "C7", "C9", "C10", "C11", "C12", "C13",
+                      "D2", "D3", "D4", "D5", "D6", "D7", "D9", "D10", "D11", "D12", "D13",
+                      "E2", "E3", "E4", "E5", "E6", "E7", "E9", "E10", "E11", "E12", "E13",
+                      "F2", "F3", "F4", "F5", "F6", "F7", "F9", "F10", "F11", "F12", "F13"]
+    # This should clear the excel sheet
+    for x in range(0, len(player_sheets)):
+        sheet = workbook[player_sheets[x]]
+
+        for y in cells_to_clear:
+            sheet[y] = None
 
     serve_rotation_team1 = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
     serve_rotation_team2 = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
@@ -1116,15 +1158,106 @@ def main():
     #play the game
 
     while home_set_wins < 3 and away_set_wins < 3:
+        # keep track of what set we are on
+        set_number = set_number +1
+
+        # recursive function to play a set and get back a winner of the set
         n = playset(team1, team2, serve_rotation_team1, serve_rotation_team2, 0, 0, True, False,
             True,True, False, False, False, True, True, result=None)
 
+        # this is where dumping the player stats into an excel sheet should happen
+
+        # the set_number should decide which collumn we put stats in
+        if set_number == 1:
+            collumn = "B"
+        elif set_number == 2:
+            collumn = "C"
+        elif set_number == 3:
+            collumn = "D"
+        elif set_number == 4:
+            collumn = "E"
+        elif set_number == 5:
+            collumn = "F"
+        else:
+            return "Error with collumn selection"
+
+        # dump stats for team 1
+        for x in range(0, len(team1)):
+            # select the right sheet for the right player
+            sheet = workbook[player_sheets[x]]
+
+            sheet["A1"] = "%s %s" % (team1[x].firstname, team1[x].lastname)
+            sheet["%s2" % collumn] = team1[x].service_aces
+            sheet['%s3' % collumn] = team1[x].service_errors
+            sheet['%s4' % collumn] = team1[x].total_serves
+            sheet['%s5' % collumn] = team1[x].kills
+            sheet['%s6' % collumn] = team1[x].attack_errors
+            sheet['%s7' % collumn] = team1[x].total_attacks
+            sheet['%s9' % collumn] = team1[x].bhe
+            sheet['%s10' % collumn] = team1[x].digs
+            sheet['%s11' % collumn] = team1[x].receiving_errors
+            sheet['%s12' % collumn] = team1[x].blocks
+            sheet['%s13' % collumn] = team1[x].blocking_errors
+
+        for y in range(6, 6+ len(team2)):
+            # select the right sheet for the right player
+            sheet = workbook[player_sheets[y]]
+
+            sheet["A1"] = "%s %s" % (team2[y-6].firstname, team1[y-6].lastname)
+            sheet["%s2" % collumn] = team2[y-6].service_aces
+            sheet["%s3" % collumn] = team2[y-6].service_errors
+            sheet["%s4" % collumn] = team2[y-6].total_serves
+            sheet["%s5" % collumn] = team2[y-6].kills
+            sheet["%s6" % collumn] = team2[y-6].attack_errors
+            sheet["%s7" % collumn] = team2[y-6].total_attacks
+            sheet["%s9" % collumn] = team2[y-6].bhe
+            sheet["%s10" % collumn] = team2[y-6].digs
+            sheet["%s11" % collumn] = team2[y-6].receiving_errors
+            sheet["%s12" % collumn] = team2[y-6].blocks
+            sheet["%s13" % collumn] = team2[y-6].blocking_errors
+
+        # this is where wiping the player stats before the next set should happen
+
+        # clear set stats for team 1
+        for player in team1:
+            player.kills = 0
+            player.attack_errors = 0
+            player.total_attacks = 0
+            player.service_aces = 0
+            player.service_errors = 0
+            player.total_serves = 0
+            player.bhe = 0
+            # defense
+            player.digs = 0
+            player.receiving_errors = 0
+            player.blocks = 0
+            player.blocking_errors = 0
+
+        # clear set stats for team 2
+        for player in team2:
+            player.kills = 0
+            player.attack_errors = 0
+            player.total_attacks = 0
+            player.service_aces = 0
+            player.service_errors = 0
+            player.total_serves = 0
+            player.bhe = 0
+            # defense
+            player.digs = 0
+            player.receiving_errors = 0
+            player.blocks = 0
+            player.blocking_errors = 0
+
+
+        # update the set score
         if n == 1:
             home_set_wins = home_set_wins + 1
         elif n == 2:
             away_set_wins = away_set_wins + 1
         else:
             print("error in assigning set win")
+
+    workbook.save(filename=filename)
 
     print("Game Over")
 
@@ -1134,32 +1267,6 @@ def main():
         print("Away Team Wins the Game")
 
     print(home_set_wins, away_set_wins)
-
-    print("\nHome Team Stats\n")
-    for x in team1:
-        print(x.firstname, x.lastname)
-        print(x.position)
-        print("Kills:", x.kills)
-        print("AE:", x.attack_errors)
-        print("BHE:", x.bhe)
-        print("Digs:", x.digs)
-        print("RE", x.receiving_errors)
-        print("Blocks:", x.blocks)
-        print("BE:", x.blocking_errors, "\n")
-
-    print("\nAway Team Stats\n")
-    for x in team2:
-        print(x.firstname, x.lastname)
-        print(x.position)
-        print("Kills:", x.kills)
-        print("AE:", x.attack_errors)
-        print("BHE:", x.bhe)
-        print("Digs:", x.digs)
-        print("RE", x.receiving_errors)
-        print("Blocks:", x.blocks)
-        print("BE:", x.blocking_errors, "\n")
-
-
 
 
 
