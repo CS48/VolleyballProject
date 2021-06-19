@@ -2,8 +2,9 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-import random, re, json, requests, numpy
-from openpyxl import load_workbook
+import random, re, json, requests, numpy, os.path
+from openpyxl import Workbook, load_workbook
+from os import path
 
 
 
@@ -25,13 +26,79 @@ positions = ["S", "OH", "OH2", "Opp", "MB", "MB2"]
 # when calling the class. At some point I think I want it to be the other way around. As of right now though, the whole
 # game engine is dependent on it being this way. The teams being created in the specific order of the positions list
 # above is kinda crucial for now. At some point soon, I will be changing this.
+
+def serialize_playerids_json(list):
+    # opening the file in w mode should delete the data, so i don't have to worry about manually overwriting.
+    file = 'player_ids.txt'
+    filepath = os.path.abspath(os.getcwd())
+    with open(os.path.join(filepath, file), 'w') as outfile:
+        json.dump(list, outfile)
+
+def serialize_gameids_json(list):
+    # opening the file in w mode should delete the data, so i don't have to worry about manually overwriting.
+    file = 'game_ids.txt'
+    filepath = os.path.abspath(os.getcwd())
+    with open(os.path.join(filepath, file), 'w') as outfile:
+        json.dump(list, outfile)
+
+def deserialize_playerids_json():
+    file = 'player_ids.txt'
+    filepath = os.path.abspath(os.getcwd())
+    if path.exists(os.path.join(filepath, file)):
+        with open(os.path.join(filepath, file)) as json_file:
+            data = json.load(json_file)
+        return list(data)
+    else:
+        print("No player id txt file.")
+
+def deserialize_gameids_json():
+    file = 'game_ids.txt'
+    filepath = os.path.abspath(os.getcwd())
+    if path.exists(os.path.join(filepath, file)):
+        with open(os.path.join(filepath, file)) as json_file:
+            data = json.load(json_file)
+        return list(data)
+    else:
+        print("No game id txt file.")
+
+def generate_id(list):
+    if list is None:
+        id = random.randint(1, 1000)
+        return id
+    else:
+        pass
+
+    while True:
+        id = random.randint(1, 1000)
+        if id in list:
+            continue
+        else:
+            return id
+
+def append_id(id, list):
+    if list is None:
+        list = [id]
+        return list
+    else:
+        list.append(id)
+        return list
+
+def delete_id(id, list):
+    if id in list:
+        delete_this = list.index(id)
+        del list[delete_this]
+        return list
+    else:
+        print("Couldn't find id")
+
 class Player:
-    def __init__(self, playertype="None"):
+    def __init__(self, arglist):
         # player info
-        self.firstname = random.choice(first_name_data)
-        self.lastname = random.choice(last_name_data)
-        self.year = random.choice(years)
-        self.position = playertype
+        self.player_id = arglist[0]
+        self.firstname = arglist[1]
+        self.lastname = arglist[2]
+        self.year = arglist[3]
+        self.position = arglist[4]
         # stat tracking
         # offense
         self.kills = 0
@@ -47,81 +114,217 @@ class Player:
         self.blocks = 0
         self.blocking_errors = 0
 
+        #attributes
 
-        # attributes generate randomly based on player type and ovr is determined by a formula that is weighted
-        # differently for each position
-        if playertype == "None":
-            self.attacking = int(numpy.random.normal(50,15, 1))
-            self.setting = int(numpy.random.normal(50,15, 1))
-            self.serving = int(numpy.random.normal(50,15, 1))
-            self.receiving = int(numpy.random.normal(50,15, 1))
-            self.reaction = int(numpy.random.normal(50,15, 1))
-            self.blocking = int(numpy.random.normal(50,15, 1))
-            self.volleyiq = int(numpy.random.normal(50,15, 1))
-        elif playertype == "S":
-            self.attacking = int(numpy.random.normal(50, 15, 1))
-            self.setting = int(numpy.random.normal(80, 5, 1))
-            self.serving = int(numpy.random.normal(50, 15, 1))
-            self.receiving = int(numpy.random.normal(50, 15, 1))
-            self.reaction = int(numpy.random.normal(50, 15, 1))
-            self.blocking = int(numpy.random.normal(50, 15, 1))
-            self.volleyiq = int(numpy.random.normal(80, 5, 1))
-            self.ovr = (1 * self.attacking + 9 * self.setting + 1 * self.serving + 1 * self.receiving + 1 * self.reaction
-                        + 1 * self.blocking + 7 * self.volleyiq) / 21
-        elif playertype == "OH" or playertype == "OH2" or playertype == "Opp":
-            self.attacking = int(numpy.random.normal(80, 5, 1))
-            self.setting = int(numpy.random.normal(50, 15, 1))
-            self.serving = int(numpy.random.normal(50, 15, 1))
-            self.receiving = int(numpy.random.normal(70, 5, 1))
-            self.reaction = int(numpy.random.normal(50, 15, 1))
-            self.blocking = int(numpy.random.normal(70, 5, 1))
-            self.volleyiq = int(numpy.random.normal(50, 15, 1))
-            self.ovr = (9 * self.attacking + 1 * self.setting + 1 * self.serving + 1 * self.receiving + 1 * self.reaction
-                        + 6 * self.blocking + 2 * self.volleyiq) / 21
-        elif playertype == "DS/L":
-            self.attacking = int(numpy.random.normal(50, 15, 1))
-            self.setting = int(numpy.random.normal(50, 15, 1))
-            self.serving = int(numpy.random.normal(50, 15, 1))
-            self.receiving = int(numpy.random.normal(80, 5, 1))
-            self.reaction = int(numpy.random.normal(80, 5, 1))
-            self.blocking = int(numpy.random.normal(50, 15, 1))
-            self.volleyiq = int(numpy.random.normal(50, 15, 1))
-            self.ovr = (1 * self.attacking + 1 * self.setting + 1 * self.serving + 9 * self.receiving + 6 * self.reaction
-                                   + 1 * self.blocking + 2 * self.volleyiq) / 21
-        elif playertype == "MB" or playertype == "MB2":
-            self.attacking = int(numpy.random.normal(70, 5, 1))
-            self.setting = int(numpy.random.normal(50, 15, 1))
-            self.serving = int(numpy.random.normal(50, 15, 1))
-            self.receiving = int(numpy.random.normal(65, 15, 1))
-            self.reaction = int(numpy.random.normal(80, 5, 1))
-            self.blocking = int(numpy.random.normal(80, 5, 1))
-            self.volleyiq = int(numpy.random.normal(50, 15, 1))
-            self.ovr = (4 * self.attacking + 1 * self.setting + 1 * self.serving + 1 * self.receiving + 4 * self.reaction
-                        + 8 * self.blocking + 2 * self.volleyiq) / 21
-        else:
-            print("error in attribute allocation")
+        self.attacking = arglist[5]
+        self.setting = arglist[6]
+        self.serving = arglist[7]
+        self.receiving = arglist[8]
+        self.reaction = arglist[9]
+        self.blocking = arglist[10]
+        self.volley_iq = arglist[11]
+
+
+
 
 
 # This creates a team of six players by taking the positions list above and iterating through each item. It calls the
 # player class to initialize a player for each of those position, which as I explained above, determines the attributes
 # of that player.
 def create_team():
-    team = []
-    for x in positions:
-        team.append(Player(x))
-    # I want the info for each player to be printed into the console
+    # checks to see if the "Teams" file exists. Creates one if it doesn't
+    if path.exists("Teams.xlsx"):
+        pass
+    else:
+        workbook = Workbook()
+        workbook.save(filename="Teams.xlsx")
+
+    # makes sure that we are working in the Teams file
+    filename = "Teams.xlsx"
+    workbook = load_workbook(filename=filename)
+
+    # asks for a name for the new team, and puts some limitations on the input.
+    while True:
+        team_name = input("Please enter a team name: ")
+        if len(team_name) > 10:
+            print("Sorry, the limit is 10 characters. Try again.")
+            continue
+        elif len(team_name) < 1:
+            print("You didn't enter anything. Try again")
+            continue
+        else:
+            # we're happy with the value given.
+            # we're ready to exit the loop.
+            break
+    # the team name ends up as the name of the sheet within the Teams file
+    team_sheet = workbook.create_sheet(team_name)
+
+    # format sheet
+    team_sheet["A1"] = "player_id"
+    team_sheet["B1"] = "first_name"
+    team_sheet["C1"] = "last_name"
+    team_sheet["D1"] = "year"
+    team_sheet["E1"] = "position"
+    team_sheet["F1"] = "attacking"
+    team_sheet["G1"] = "setting"
+    team_sheet["H1"] = "serving"
+    team_sheet["I1"] = "receiving"
+    team_sheet["J1"] = "reaction"
+    team_sheet["K1"] = "blocking"
+    team_sheet["L1"] = "volley_iq"
+
+    # generates 5 players (one for every position) with random ratings
+    for x in range(0, len(positions)):
+        row = x+2
+
+        # create_playerids_txt()
+        print("hi")
+        playerids = deserialize_playerids_json()
+        new_id = generate_id(playerids)
+        updated_list = append_id(new_id, playerids)
+        serialize_playerids_json(updated_list)
+
+        team_sheet["A%d" % row] = new_id
+        team_sheet["B%d" % row] = random.choice(first_name_data)
+        team_sheet["C%d" % row] = random.choice(last_name_data)
+        team_sheet["D%d" % row] = random.choice(years)
+        team_sheet["E%d" % row] = positions[x]
+        team_sheet["F%d" % row] = int(numpy.random.normal(65, 2, 1))
+        team_sheet["G%d" % row] = int(numpy.random.normal(65, 2, 1))
+        team_sheet["H%d" % row] = int(numpy.random.normal(65, 1, 1))
+        team_sheet["I%d" % row] = int(numpy.random.normal(50, 15, 1))
+        team_sheet["J%d" % row] = int(numpy.random.normal(50, 15, 1))
+        team_sheet["K%d" % row] = int(numpy.random.normal(50, 15, 1))
+        team_sheet["L%d" % row] = int(numpy.random.normal(50, 15, 1))
+
+
+
+    # saves the file, very important
+    workbook.save(filename=filename)
+
+    # Now we will to create a team records sheet to store the team's wins and losses
+    if path.exists("Team_results.xlsx"):
+        pass
+    else:
+        workbook = Workbook()
+        workbook.save(filename="Team_results.xlsx")
+
+    # I want to name the file "Team_results" and the sheet will be the name of the team.
+    filename = "Team_results.xlsx"
+    workbook = load_workbook(filename=filename)
+    result_sheet = workbook.create_sheet(team_name)
+
+    result_sheet["A1"] = "game_id"
+    result_sheet["B1"] = "opponent"
+    result_sheet["C1"] = "result"
+
+    workbook.save(filename=filename)
+
+    # feedback is good design ;)
+    print("Team Successfully created\n")
+
+# when we need to make player objects out of excel data, this is how we do it.
+def load_team():
+    # first we check that the Team file exists
+    if path.exists("Teams.xlsx"):
+        # then we make sure we are working in it
+        filename = "Teams.xlsx"
+        workbook = load_workbook(filename=filename)
+        # we check that file to make sure that the team (given as an arg) is one of the sheets
+        # within the file.
+        while True:
+            team_name = input("Which team would you like to load?:")
+            if team_name in workbook.sheetnames:
+                # If it exists, we select that sheet
+                sheet = workbook[team_name]
+                # this will be a list of player objects
+                team = []
+                # for each row in that sheet, which represents a player, we make a player object by
+                # putting the data from that row into a list and feeding that list into Player() as
+                # an arg. Then we put that player in the team list
+                for x in range(2, sheet.max_row + 1):
+                    for value in sheet.iter_rows(min_row=x, max_row=x, values_only=True):
+                        arglist = list(value)
+                    player = Player(arglist)
+                    team.append(player)
+                # return the team, so that we can do something with it.
+                return team, team_name
+            else:
+                print("That team doesn't exist in the spreadsheet, try again")
+                continue
+
+def print_team(team):
     for x in team:
         print(x.firstname, x.lastname)
-        print(x.position,"Ovr:%d" % x.ovr, "\n")
+        print(x.position, "\n")
+
         print("Attacking:", x.attacking)
         print("Setting:", x.setting)
         print("Serving:", x.serving)
         print("Receiving:", x.receiving)
         print("Reaction:", x.reaction)
         print("Blocking:", x.blocking)
-        print("VolleyIQ:", x.volleyiq, "\n")
+        print("Volley_iq:", x.volley_iq)
 
-    return team
+# This will delete a sheet of data (effectively a team) from the Team file
+def delete_team():
+    # Check to make sure the Team file exists
+    if path.exists("Teams.xlsx"):
+        filename = "Teams.xlsx"
+        workbook = load_workbook(filename=filename)
+
+        # Show a list of the current sheets (Teams)
+        print("Here are the current teams...")
+        print(workbook.sheetnames, "\n")
+
+
+        while True:
+            # enter the name of a team to delete it
+            team_name = input("Enter team name to delete:")
+            if team_name in workbook.sheetnames:
+
+                # this should update the id list to make sure that it is cleared of the deleted players
+                sheet = workbook[team_name]
+                ids_to_delete = []
+                for x in range(2, sheet.max_row + 1):
+                    ids_to_delete.append(sheet["A%d" % x].value)
+                id_list = deserialize_playerids_json()
+                print(ids_to_delete)
+                print(id_list)
+                for x in ids_to_delete:
+                    id_list = delete_id(x, id_list)
+                serialize_playerids_json(id_list)
+
+                workbook.remove(workbook[team_name])
+                break
+            else:
+                print("That team doesn't exist, try again")
+                continue
+        # save after it's done
+        workbook.save(filename=filename)
+
+        if path.exists("Team_results.xlsx"):
+            filename = "Team_results.xlsx"
+            workbook = load_workbook(filename=filename)
+            workbook.remove(workbook[team_name])
+
+            workbook.save(filename=filename)
+
+        # feedback is good design
+        print("%s has been deleted." % team_name)
+    else:
+        print("No teams currently.\n")
+
+
+def show_teams():
+    # for checking the sheets (Teams) in the Teams file
+    if path.exists("Teams.xlsx"):
+        filename = "Teams.xlsx"
+        workbook = load_workbook(filename=filename)
+
+        print(workbook.sheetnames, "\n")
+    else:
+        print("No teams exist currently.\n")
 
 # for making a coin flip based on probability p. Such as an attack that has a 30% probability to work
 def flip(p):
@@ -208,13 +411,13 @@ def serve_target(server, serve_rotation):
 
         potential_targets[current_pos] = current_player
 
-    if 0 <= server.volleyiq < 40:
+    if 0 <= server.volley_iq < 40:
         target = random.choices(potential_targets, weights=(20, 20, 60), k=1)
-    elif 40 <= server.volleyiq < 60:
+    elif 40 <= server.volley_iq < 60:
         target = random.choices(potential_targets, weights=(30, 50, 20), k=1)
-    elif 60 <= server.volleyiq < 80:
+    elif 60 <= server.volley_iq < 80:
         target = random.choices(potential_targets, weights=(50, 30, 20), k=1)
-    elif 80 <= server.volleyiq <= 100:
+    elif 80 <= server.volley_iq <= 100:
         target = random.choices(potential_targets, weights=(60, 20, 20), k=1)
     else:
         print("couldn't determine best attack chance")
@@ -320,11 +523,11 @@ def block(attacker, serve_rotation):
     else:
         print("attack score error: attack stat not between 0 and 100")
 
-    if 0 <= attacker.volleyiq < 33:
+    if 0 <= attacker.volley_iq < 33:
         attack_score = attack_score + 0
-    elif 33 <= attacker.volleyiq < 66:
+    elif 33 <= attacker.volley_iq < 66:
         attack_score = attack_score + 1
-    elif 66 <= attacker.volleyiq <= 100:
+    elif 66 <= attacker.volley_iq <= 100:
         attack_score = attack_score + 2
     else:
         print("attack score error: iq stat not between 0 and 100")
@@ -453,11 +656,11 @@ def attack(attacker, receiver, serve_rotation):
         else:
             print("attack score error: attack stat not between 0 and 100")
 
-        if 0 <= attacker.volleyiq < 33:
+        if 0 <= attacker.volley_iq < 33:
             attack_score = attack_score + 0
-        elif 33 <= attacker.volleyiq < 66:
+        elif 33 <= attacker.volley_iq < 66:
             attack_score = attack_score + 1
-        elif 66 <= attacker.volleyiq <= 100:
+        elif 66 <= attacker.volley_iq <= 100:
             attack_score = attack_score + 2
         else:
             print("attack score error: iq stat not between 0 and 100")
@@ -549,7 +752,7 @@ def attack(attacker, receiver, serve_rotation):
 
 
 # this is what is used to select the players on the other team that should be in defensive receiving positions.
-# in total there are three players that could be attacked. I went a step further and used the attacker's volleyiq to
+# in total there are three players that could be attacked. I went a step further and used the attacker's volley_iq to
 # make the selection of a target weighted. If the attacker has a high knowledge, they have a greater chance of attacker
 # the defender with the lowest receiving rating
 def attack_target(attacker, serve_rotation):
@@ -572,13 +775,13 @@ def attack_target(attacker, serve_rotation):
 
         potential_targets[current_pos] = current_player
 
-    if 0 <= attacker.volleyiq < 40:
+    if 0 <= attacker.volley_iq < 40:
         target = random.choices(potential_targets, weights=(20, 20, 60), k=1)
-    elif 40 <= attacker.volleyiq < 60:
+    elif 40 <= attacker.volley_iq < 60:
         target = random.choices(potential_targets, weights=(30, 50, 20), k=1)
-    elif 60 <= attacker.volleyiq < 80:
+    elif 60 <= attacker.volley_iq < 80:
         target = random.choices(potential_targets, weights=(50, 30, 20), k=1)
-    elif 80 <= attacker.volleyiq <= 100:
+    elif 80 <= attacker.volley_iq <= 100:
         target = random.choices(potential_targets, weights=(60, 20, 20), k=1)
     else:
         print("couldn't determine best attack chance")
@@ -1095,62 +1298,67 @@ def playset(hometeam, awayteam, serve_rotation_home, serve_rotation_away, homesc
 
 
 
-def main():
-    team1 = create_team()
-    team2 = create_team()
+def play():
+    # make sure there is a teams file before we do anything
+    if path.exists("Teams.xlsx"):
+        pass
+    else:
+        print("There are no teams currently.")
+        return 0
+
+    # work in the teams file
+    filename = "Teams.xlsx"
+    workbook = load_workbook(filename=filename)
+    # let the user select the two teams that are gonna play
+    print("Here are the teams that are available:\n")
+    show_teams()
+
+    print("Who is the away team?")
+    result = load_team()
+    away_team = result[0]
+    away_name = result[1]
+
+    print("Who is the home team?")
+    result = load_team()
+    home_team = result[0]
+    home_name = result[1]
+
     home_set_wins = 0
     away_set_wins = 0
     set_number = 0
 
-    # Opening the spreadsheet and making a list of the sheet names
-    filename = "C:/Users/calvi/Desktop/Test_VB_Stat_DB.xlsx"
-    workbook = load_workbook(filename=filename)
-    player_sheets = workbook.sheetnames
 
-    # A very clunky way to clear the excel spreadsheet before it gets populated with new data
-    cells_to_clear = ["B2", "B3", "B4", "B5", "B6", "B7", "B9", "B10", "B11", "B12", "B13",
-                      "C2", "C3", "C4", "C5", "C6", "C7", "C9", "C10", "C11", "C12", "C13",
-                      "D2", "D3", "D4", "D5", "D6", "D7", "D9", "D10", "D11", "D12", "D13",
-                      "E2", "E3", "E4", "E5", "E6", "E7", "E9", "E10", "E11", "E12", "E13",
-                      "F2", "F3", "F4", "F5", "F6", "F7", "F9", "F10", "F11", "F12", "F13"]
-    # This should clear the excel sheet
-    for x in range(0, len(player_sheets)):
-        sheet = workbook[player_sheets[x]]
-
-        for y in cells_to_clear:
-            sheet[y] = None
-
-    serve_rotation_team1 = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
-    serve_rotation_team2 = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
-    for player in team1:
+    serve_rotation_away = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
+    serve_rotation_home = {'Rotation': 1, '1': None, '2': None, '3': None, '4': None, '5': None, '6': None}
+    for player in away_team:
         if player.position == "S":
-            serve_rotation_team1['1'] = player
+            serve_rotation_away['1'] = player
         elif player.position == "OH":
-            serve_rotation_team1['2'] = player
+            serve_rotation_away['2'] = player
         elif player.position == "MB":
-            serve_rotation_team1['3'] = player
+            serve_rotation_away['3'] = player
         elif player.position == "Opp":
-            serve_rotation_team1['4'] = player
+            serve_rotation_away['4'] = player
         elif player.position == "OH2":
-            serve_rotation_team1['5'] = player
+            serve_rotation_away['5'] = player
         elif player.position == "MB2":
-            serve_rotation_team1['6'] = player
+            serve_rotation_away['6'] = player
         else:
             print("error assigning player to team1 serve rotation")
 
-    for player in team2:
+    for player in home_team:
         if player.position == "S":
-            serve_rotation_team2['1'] = player
+            serve_rotation_home['1'] = player
         elif player.position == "OH":
-            serve_rotation_team2['2'] = player
+            serve_rotation_home['2'] = player
         elif player.position == "MB":
-            serve_rotation_team2['3'] = player
+            serve_rotation_home['3'] = player
         elif player.position == "Opp":
-            serve_rotation_team2['4'] = player
+            serve_rotation_home['4'] = player
         elif player.position == "OH2":
-            serve_rotation_team2['5'] = player
+            serve_rotation_home['5'] = player
         elif player.position == "MB2":
-            serve_rotation_team2['6'] = player
+            serve_rotation_home['6'] = player
         else:
             print("error assigning player to team2 serve rotation")
 
@@ -1162,91 +1370,8 @@ def main():
         set_number = set_number +1
 
         # recursive function to play a set and get back a winner of the set
-        n = playset(team1, team2, serve_rotation_team1, serve_rotation_team2, 0, 0, True, False,
+        n = playset(away_team, home_team, serve_rotation_away, serve_rotation_home, 0, 0, True, False,
             True,True, False, False, False, True, True, result=None)
-
-        # this is where dumping the player stats into an excel sheet should happen
-
-        # the set_number should decide which collumn we put stats in
-        if set_number == 1:
-            collumn = "B"
-        elif set_number == 2:
-            collumn = "C"
-        elif set_number == 3:
-            collumn = "D"
-        elif set_number == 4:
-            collumn = "E"
-        elif set_number == 5:
-            collumn = "F"
-        else:
-            return "Error with collumn selection"
-
-        # dump stats for team 1
-        for x in range(0, len(team1)):
-            # select the right sheet for the right player
-            sheet = workbook[player_sheets[x]]
-
-            sheet["A1"] = "%s %s" % (team1[x].firstname, team1[x].lastname)
-            sheet["%s2" % collumn] = team1[x].service_aces
-            sheet['%s3' % collumn] = team1[x].service_errors
-            sheet['%s4' % collumn] = team1[x].total_serves
-            sheet['%s5' % collumn] = team1[x].kills
-            sheet['%s6' % collumn] = team1[x].attack_errors
-            sheet['%s7' % collumn] = team1[x].total_attacks
-            sheet['%s9' % collumn] = team1[x].bhe
-            sheet['%s10' % collumn] = team1[x].digs
-            sheet['%s11' % collumn] = team1[x].receiving_errors
-            sheet['%s12' % collumn] = team1[x].blocks
-            sheet['%s13' % collumn] = team1[x].blocking_errors
-
-        for y in range(6, 6+ len(team2)):
-            # select the right sheet for the right player
-            sheet = workbook[player_sheets[y]]
-
-            sheet["A1"] = "%s %s" % (team2[y-6].firstname, team1[y-6].lastname)
-            sheet["%s2" % collumn] = team2[y-6].service_aces
-            sheet["%s3" % collumn] = team2[y-6].service_errors
-            sheet["%s4" % collumn] = team2[y-6].total_serves
-            sheet["%s5" % collumn] = team2[y-6].kills
-            sheet["%s6" % collumn] = team2[y-6].attack_errors
-            sheet["%s7" % collumn] = team2[y-6].total_attacks
-            sheet["%s9" % collumn] = team2[y-6].bhe
-            sheet["%s10" % collumn] = team2[y-6].digs
-            sheet["%s11" % collumn] = team2[y-6].receiving_errors
-            sheet["%s12" % collumn] = team2[y-6].blocks
-            sheet["%s13" % collumn] = team2[y-6].blocking_errors
-
-        # this is where wiping the player stats before the next set should happen
-
-        # clear set stats for team 1
-        for player in team1:
-            player.kills = 0
-            player.attack_errors = 0
-            player.total_attacks = 0
-            player.service_aces = 0
-            player.service_errors = 0
-            player.total_serves = 0
-            player.bhe = 0
-            # defense
-            player.digs = 0
-            player.receiving_errors = 0
-            player.blocks = 0
-            player.blocking_errors = 0
-
-        # clear set stats for team 2
-        for player in team2:
-            player.kills = 0
-            player.attack_errors = 0
-            player.total_attacks = 0
-            player.service_aces = 0
-            player.service_errors = 0
-            player.total_serves = 0
-            player.bhe = 0
-            # defense
-            player.digs = 0
-            player.receiving_errors = 0
-            player.blocks = 0
-            player.blocking_errors = 0
 
 
         # update the set score
@@ -1257,18 +1382,47 @@ def main():
         else:
             print("error in assigning set win")
 
-    workbook.save(filename=filename)
+
 
     print("Game Over")
 
     if home_set_wins == 3:
-        print("Home Team Wins the Game")
+        print("%s Wins the Game" % home_name)
     else:
-        print("Away Team Wins the Game")
+        print("%s Wins the Game" % away_name)
 
     print(home_set_wins, away_set_wins)
 
+    # log game result in the team_results file
+    # first we need to give the game an id
+    game_ids = deserialize_gameids_json()
+    new_id = generate_id(game_ids)
+    updated_list = append_id(new_id, game_ids)
+    serialize_gameids_json(updated_list)
 
+    # updating team results sheet for away team
+    filename = "Team_results.xlsx"
+    workbook = load_workbook(filename=filename)
+    awayteam_sheet = workbook[away_name]
+    x = awayteam_sheet.max_row + 1
+    awayteam_sheet["A%d" % x] = new_id
+    awayteam_sheet["B%d" % x] = home_name
+    if away_set_wins > home_set_wins:
+        awayteam_sheet["C%d" % x] = "W"
+    else:
+        awayteam_sheet["C%d" % x] = "L"
+    workbook.save(filename=filename)
+
+    # updating team results sheet for home team
+    hometeam_sheet = workbook[home_name]
+    x = hometeam_sheet.max_row + 1
+    hometeam_sheet["A%d" % x] = new_id
+    hometeam_sheet["B%d" % x] = away_name
+    if home_set_wins > away_set_wins:
+        hometeam_sheet["C%d" % x] = "W"
+    else:
+        hometeam_sheet["C%d" % x] = "L"
+    workbook.save(filename=filename)
 
 def rotate_serve(serve_rotation_dict):
     one = serve_rotation_dict['1']
@@ -1288,6 +1442,49 @@ def rotate_serve(serve_rotation_dict):
     return serve_rotation_dict
 
 
+def main():
+    # This is effectively a console based menu that keeps running until you exit it
+    # the menu options are selected by entering a number that corresponds with that option.
+    # Run main() and give it a try.
+    while True:
+        print("Menu:\n"
+              "1. Generate a Team\n"
+              "2. Delete a Team\n"
+              "3. See Current Teams\n"
+              "4. Load Teams\n"
+              "5. Play a game\n"
+              "6. Exit")
+
+        selection = input("Input a number:")
+        if selection == "1":
+            print("Creating a team for you...")
+            create_team()
+            continue
+        elif selection == "2":
+            delete_team()
+            continue
+        elif selection == "3":
+            show_teams()
+            continue
+        elif selection == "4":
+            print("Current Teams:")
+            show_teams()
+            team = load_team()
+            print_team(team[0])
+            print("\n")
+            continue
+        elif selection == "5":
+            play()
+            continue
+        elif selection == "6":
+            s = input("Are you sure (y/n):")
+            if s == "y":
+                break
+            else:
+                continue
+        else:
+            print("Invalid input, try again.\n")
+            continue
 
 
 
