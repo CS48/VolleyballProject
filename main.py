@@ -18,6 +18,8 @@ last_name_data = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "D
                   "White", "Lopez", "Lee", "Gonzalez", "Harris", "Clark", "Lewis", "Robinson", "Walker", "Perez",
                   "Hall", "Young", "Allen", "Sanchez", "Wright", "King", "Scott", "Green", "Baker", "Adams", "Nelson",
                   "Hill", "Ramirez", "Campbell", "Mitchell", "Roberts"]
+team_data = ["Atlanta", "Boston", "Charlotte", "Chicago", "Denver", "Detroit", "Houston", "Indiana", "Los Angeles",
+             "Miami", "Minnesota"]
 
 years = ["Fr", "So", "Jr", "Sr"]
 positions = ["S", "OH", "OH2", "Opp", "MB", "MB2"]
@@ -131,7 +133,7 @@ class Player:
 # This creates a team of six players by taking the positions list above and iterating through each item. It calls the
 # player class to initialize a player for each of those position, which as I explained above, determines the attributes
 # of that player.
-def create_team():
+def create_team(team_name):
     # checks to see if the "Teams" file exists. Creates one if it doesn't
     if path.exists("Teams.xlsx"):
         pass
@@ -143,19 +145,7 @@ def create_team():
     filename = "Teams.xlsx"
     workbook = load_workbook(filename=filename)
 
-    # asks for a name for the new team, and puts some limitations on the input.
-    while True:
-        team_name = input("Please enter a team name: ")
-        if len(team_name) > 10:
-            print("Sorry, the limit is 10 characters. Try again.")
-            continue
-        elif len(team_name) < 1:
-            print("You didn't enter anything. Try again")
-            continue
-        else:
-            # we're happy with the value given.
-            # we're ready to exit the loop.
-            break
+
     # the team name ends up as the name of the sheet within the Teams file
     team_sheet = workbook.create_sheet(team_name)
 
@@ -1391,7 +1381,7 @@ def play():
     else:
         print("%s Wins the Game" % away_name)
 
-    print(home_set_wins, away_set_wins)
+    print(away_set_wins, home_set_wins)
 
     # log game result in the team_results file
     # first we need to give the game an id
@@ -1442,10 +1432,49 @@ def rotate_serve(serve_rotation_dict):
     return serve_rotation_dict
 
 
+def create_save():
+
+    x = input("Save Name?: ")
+
+    current_directory = os.getcwd()
+    final_directory = os.path.join(current_directory, r'%s' % x)
+    if not os.path.exists(final_directory):
+        os.makedirs(final_directory)
+        print("Directory Created: %s" % x)
+
+    os.chdir(final_directory)
+    print("Entered Directory: %s\n" % x)
+
+    for y in team_data:
+        create_team(y)
+
+def load_save():
+    current_directory = os.getcwd()
+    for file in os.listdir(current_directory):
+        d = os.path.join(current_directory, file)
+        if os.path.isdir(d):
+            print(d)
+
+    x = input("Choose save: ")
+    final_directory = os.path.join(current_directory, r'%s' % x)
+    os.chdir(final_directory)
+    print("Entered Directory: %s\n" % x)
+
 def main():
     # This is effectively a console based menu that keeps running until you exit it
     # the menu options are selected by entering a number that corresponds with that option.
     # Run main() and give it a try.
+
+    print("Menu:\n"
+          "1. Create a Save\n"
+          "2. Load a Save")
+
+    selection = input("Input a number:")
+    if selection == "1":
+        create_save()
+    elif selection == "2":
+        load_save()
+
     while True:
         print("Menu:\n"
               "1. Generate a Team\n"
@@ -1485,6 +1514,7 @@ def main():
         else:
             print("Invalid input, try again.\n")
             continue
+
 
 
 
